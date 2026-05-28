@@ -1,0 +1,649 @@
+/* ==========================================================================
+   NEON BREAKER - 核心樣式表 (Cyberpunk/Synthwave 風格)
+   ========================================================================== */
+
+/* 1. 全域重設與變數定義 */
+:root {
+    --bg-dark: #07080d;
+    --panel-bg: rgba(13, 15, 28, 0.75);
+    --panel-border: rgba(0, 243, 255, 0.2);
+    
+    /* 霓虹色彩系統 */
+    --neon-cyan: #00f3ff;
+    --neon-magenta: #ff007f;
+    --neon-yellow: #ffdf00;
+    --neon-green: #39ff14;
+    --neon-purple: #bd00ff;
+    --neon-red: #ff3333;
+    
+    /* 發光濾鏡定義 */
+    --glow-cyan: 0 0 10px rgba(0, 243, 255, 0.6), 0 0 20px rgba(0, 243, 255, 0.3);
+    --glow-magenta: 0 0 10px rgba(ff, 0, 127, 0.6), 0 0 20px rgba(ff, 0, 127, 0.3);
+    --glow-yellow: 0 0 10px rgba(ff, 223, 0, 0.6), 0 0 20px rgba(ff, 223, 0, 0.3);
+    --glow-green: 0 0 10px rgba(57, 255, 20, 0.6), 0 0 20px rgba(57, 255, 20, 0.3);
+    
+    /* 字體 */
+    --font-header: 'Orbitron', system-ui, -apple-system, sans-serif;
+    --font-body: 'Rajdhani', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: #f0f3ff;
+    font-family: var(--font-body);
+    font-size: 18px;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+/* 2. 背景特效：霓虹流光網格與掃描線 */
+.cyber-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    background: 
+        radial-gradient(circle at 50% 50%, rgba(20, 10, 40, 0.6) 0%, rgba(5, 5, 10, 1) 100%),
+        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 100%, 100% 4px, 6px 100%;
+}
+
+.cyber-background::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 40%;
+    background: 
+        linear-gradient(0deg, rgba(189, 0, 255, 0.1) 0%, transparent 100%),
+        perspective(500px) rotateX(60deg) 
+        linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px) 0 0 / 40px 40px,
+        perspective(500px) rotateX(60deg) 
+        linear-gradient(0deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px) 0 0 / 40px 40px;
+    transform-origin: bottom center;
+    animation: grid-scroll 20s linear infinite;
+}
+
+@keyframes grid-scroll {
+    0% { background-position: 0 0, 0 0, 0 0; }
+    100% { background-position: 0 0, 0 400px, 0 400px; }
+}
+
+.scanlines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%, 
+        rgba(0, 0, 0, 0.15) 50%
+    ), linear-gradient(
+        90deg,
+        rgba(255, 0, 0, 0.03),
+        rgba(0, 255, 0, 0.01),
+        rgba(0, 0, 255, 0.03)
+    );
+    background-size: 100% 4px, 3px 100%;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* 3. 容器排版 */
+.app-container {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    height: auto;
+    aspect-ratio: 4 / 3.4;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+    padding: 20px;
+}
+
+/* 4. 靜音按鈕 */
+.sound-btn {
+    position: absolute;
+    top: -20px;
+    right: 20px;
+    background: rgba(10, 10, 15, 0.8);
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    padding: 6px 14px;
+    font-family: var(--font-header);
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 4px;
+    box-shadow: var(--glow-cyan);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 100;
+}
+
+.sound-btn:hover {
+    background: var(--neon-cyan);
+    color: #000;
+    box-shadow: 0 0 15px var(--neon-cyan);
+}
+
+/* 5. 磨砂玻璃覆蓋層 (Overlay Screens) */
+.screen-overlay {
+    position: absolute;
+    top: 5%;
+    left: 5%;
+    width: 90%;
+    height: 90%;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(0, 243, 255, 0.05);
+    text-align: center;
+    padding: 30px;
+}
+
+.screen-overlay.hidden {
+    opacity: 0;
+    transform: scale(0.92);
+    pointer-events: none;
+    z-index: -10;
+}
+
+.screen-overlay.active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+/* 霓虹炫彩標題與故障感(Glitch) */
+.neon-title {
+    font-family: var(--font-header);
+    font-size: 56px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: #fff;
+    text-shadow: 
+        0 0 10px rgba(255, 255, 255, 0.8),
+        0 0 20px var(--neon-magenta),
+        0 0 40px var(--neon-magenta),
+        0 0 60px var(--neon-purple);
+    margin-bottom: 5px;
+    position: relative;
+    animation: neon-pulse 1.5s infinite alternate;
+}
+
+.neon-title.cyan {
+    text-shadow: 
+        0 0 10px rgba(255, 255, 255, 0.8),
+        0 0 20px var(--neon-cyan),
+        0 0 40px var(--neon-cyan);
+}
+
+.neon-title.yellow {
+    text-shadow: 
+        0 0 10px rgba(255, 255, 255, 0.8),
+        0 0 20px var(--neon-yellow),
+        0 0 40px var(--neon-yellow);
+}
+
+@keyframes neon-pulse {
+    0% {
+        text-shadow: 
+            0 0 5px rgba(255, 255, 255, 0.8),
+            0 0 15px var(--neon-magenta),
+            0 0 30px var(--neon-magenta),
+            0 0 45px var(--neon-purple);
+    }
+    100% {
+        text-shadow: 
+            0 0 12px rgba(255, 255, 255, 0.9),
+            0 0 25px var(--neon-magenta),
+            0 0 50px var(--neon-magenta),
+            0 0 80px var(--neon-purple);
+    }
+}
+
+.cyber-subtitle {
+    font-family: var(--font-header);
+    font-size: 14px;
+    color: var(--neon-cyan);
+    letter-spacing: 3px;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+/* 難度選擇器 */
+.difficulty-selector {
+    margin-bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.selector-label {
+    font-size: 15px;
+    letter-spacing: 2px;
+    color: #a0a5c0;
+    text-transform: uppercase;
+}
+
+.btn-group {
+    display: flex;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.diff-btn {
+    background: transparent;
+    border: none;
+    color: #a0a5c0;
+    padding: 8px 24px;
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.diff-btn:hover {
+    color: #fff;
+}
+
+.diff-btn.active {
+    background: var(--panel-border);
+    color: var(--neon-cyan);
+    box-shadow: inset 0 0 8px rgba(0, 243, 255, 0.2);
+    text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+}
+
+/* 霓虹按鈕 */
+.glowing-btn {
+    font-family: var(--font-header);
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    padding: 15px 45px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    background: #000;
+    color: #fff;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.glowing-btn::before {
+    content: '';
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 10px;
+    background: linear-gradient(45deg, var(--neon-cyan), var(--neon-magenta), var(--neon-yellow));
+    z-index: -1;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+}
+
+.glowing-btn:hover::before {
+    opacity: 1;
+}
+
+.glowing-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 243, 255, 0.4);
+    text-shadow: 0 0 5px #fff;
+}
+
+.glowing-btn.magenta::before {
+    background: linear-gradient(45deg, var(--neon-magenta), var(--neon-purple));
+}
+.glowing-btn.magenta:hover {
+    box-shadow: 0 8px 25px rgba(255, 0, 127, 0.4);
+}
+
+.glowing-btn.cyan::before {
+    background: linear-gradient(45deg, var(--neon-cyan), #005f73);
+}
+.glowing-btn.cyan:hover {
+    box-shadow: 0 8px 25px rgba(0, 243, 255, 0.4);
+}
+
+.glowing-btn.yellow::before {
+    background: linear-gradient(45deg, var(--neon-yellow), #d97706);
+}
+.glowing-btn.yellow:hover {
+    box-shadow: 0 8px 25px rgba(255, 223, 0, 0.4);
+}
+
+.glowing-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.8);
+}
+
+/* 控制說明面板 */
+.instructions-panel {
+    margin-top: 35px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 15px 25px;
+    max-width: 500px;
+    text-align: left;
+}
+
+.instructions-panel h3 {
+    font-family: var(--font-header);
+    font-size: 14px;
+    color: var(--neon-yellow);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+.instructions-panel ul {
+    list-style: none;
+    font-size: 15px;
+    color: #cbd5e1;
+}
+
+.instructions-panel li {
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.key {
+    color: var(--neon-cyan);
+    font-weight: bold;
+}
+
+/* 6. 遊戲核心容器 (HUD & Canvas) */
+.game-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    opacity: 0.1;
+    transform: scale(0.98);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    pointer-events: none;
+}
+
+.game-wrapper.active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+/* HUD 樣式 */
+.hud-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 8px 16px;
+    gap: 15px;
+    box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.05);
+    backdrop-filter: blur(8px);
+}
+
+.hud-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.hud-label {
+    font-size: 11px;
+    font-family: var(--font-header);
+    color: #828ba8;
+    letter-spacing: 1.5px;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+}
+
+.hud-value {
+    font-family: var(--font-header);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.neon-cyan-text { color: var(--neon-cyan); text-shadow: 0 0 5px rgba(0, 243, 255, 0.4); }
+.neon-magenta-text { color: var(--neon-magenta); text-shadow: 0 0 5px rgba(255, 0, 127, 0.4); }
+.neon-yellow-text { color: var(--neon-yellow); text-shadow: 0 0 5px rgba(255, 223, 0, 0.4); }
+.neon-green-text { color: var(--neon-green); text-shadow: 0 0 5px rgba(57, 255, 20, 0.4); }
+
+.lives-icons {
+    display: flex;
+    gap: 5px;
+    font-size: 16px;
+    color: var(--neon-magenta);
+    text-shadow: 0 0 8px var(--neon-magenta);
+}
+
+.life-heart {
+    animation: heart-pulse 1.2s infinite alternate;
+}
+
+@keyframes heart-pulse {
+    0% { opacity: 0.5; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1.1); }
+}
+
+/* 畫布外邊框霓虹燈 */
+.canvas-wrapper {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 15px 0;
+    border-radius: 8px;
+    border: 1px solid var(--panel-border);
+    background: rgba(4, 5, 8, 0.9);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(0, 243, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+#game-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 800px;
+    max-height: 600px;
+    background-color: transparent;
+    cursor: none; /* 在畫布內隱藏滑鼠指針 */
+}
+
+/* 暫停畫面疊加 */
+.overlay-msg {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(5, 5, 8, 0.85);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 15;
+    transition: opacity 0.3s ease;
+}
+
+.overlay-msg.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.neon-pulse-text {
+    font-family: var(--font-header);
+    font-size: 32px;
+    color: var(--neon-magenta);
+    text-shadow: var(--glow-magenta);
+    animation: text-pulse 1s infinite alternate;
+    margin-bottom: 10px;
+}
+
+@keyframes text-pulse {
+    0% { transform: scale(0.98); opacity: 0.8; }
+    100% { transform: scale(1.02); opacity: 1; }
+}
+
+/* 7. 結算畫面欄位 */
+.score-summary {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 20px 40px;
+    margin-bottom: 30px;
+    min-width: 280px;
+}
+
+.score-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 20px;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.score-row:last-child {
+    margin-bottom: 0;
+}
+
+.score-row span:last-child {
+    font-family: var(--font-header);
+    font-weight: bold;
+}
+
+.level-bonus-summary {
+    font-size: 18px;
+    color: #cbd5e1;
+    margin-bottom: 30px;
+}
+
+.level-bonus-summary p {
+    margin-bottom: 8px;
+}
+
+/* 8. 道具狀態 HUD (列出目前啟用的道具時長) */
+.powerup-status-container {
+    position: absolute;
+    bottom: -45px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    z-index: 50;
+    pointer-events: none;
+}
+
+.powerup-pill {
+    background: rgba(10, 10, 15, 0.95);
+    border: 1px solid var(--p-color);
+    box-shadow: 0 0 10px var(--p-color);
+    border-radius: 20px;
+    padding: 4px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #fff;
+    animation: pill-slide-in 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes pill-slide-in {
+    0% { transform: translateY(15px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+.powerup-progress {
+    width: 45px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.powerup-progress-bar {
+    height: 100%;
+    background: var(--p-color);
+    width: 100%;
+    transition: width 0.1s linear;
+}
+
+/* 9. 畫面抖動特效 */
+.screen-shake {
+    animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+@keyframes shake {
+    10%, 90% { transform: translate3d(-2px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+/* 10. 支援行動裝置適配 (如果寬度不足) */
+@media (max-width: 768px) {
+    .app-container {
+        max-width: 95%;
+        aspect-ratio: auto;
+        height: 100vh;
+        padding: 10px;
+    }
+    
+    .hud-value {
+        font-size: 16px;
+    }
+    
+    .neon-title {
+        font-size: 38px;
+    }
+    
+    .glowing-btn {
+        padding: 12px 30px;
+        font-size: 16px;
+    }
+}
