@@ -199,7 +199,72 @@ class ParticleEngine {
     }
 }
 
-// 3. 遊戲主類別 (NEON BREAKER ENGINE)
+// 3. 全球線上排行榜管理類別 (HTTPS 連線 KVdb.io 儲存庫)
+class LeaderboardManager {
+    constructor() {
+        this.bucketId = 'PextthewU1xt9erY9foqft';
+        this.url = `https://kvdb.io/${this.bucketId}/leaderboard`;
+        this.scores = [];
+    }
+
+    // 下載排行榜
+    async getScores() {
+        try {
+            const response = await fetch(this.url);
+            if (!response.ok) {
+                if (response.status === 404) return []; // 還沒有資料，回傳空陣列
+                throw new Error('無法取得線上排行榜');
+            }
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                // 確保排序正確並限制前 10 名
+                this.scores = data.sort((a, b) => b.score - a.score).slice(0, 10);
+                return this.scores;
+            }
+            return [];
+        } catch (error) {
+            console.error('線上排行榜下載錯誤:', error);
+            return null; // 代表連線失敗
+        }
+    }
+
+    // 上傳新分數
+    async addScore(name, score, level) {
+        try {
+            // 先獲取最新排行榜，防止覆蓋他人分數
+            const currentScores = await this.getScores() || [];
+            
+            // 寫入新紀錄
+            currentScores.push({
+                name: name.toUpperCase(),
+                score: parseInt(score),
+                level: parseInt(level),
+                date: new Date().toLocaleDateString()
+            });
+
+            // 再次排序並只截取前 10 名
+            const updated = currentScores
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 10);
+
+            // POST 回傳雲端資料庫
+            const response = await fetch(this.url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updated)
+            });
+
+            if (!response.ok) throw new Error('資料庫上傳失敗');
+            this.scores = updated;
+            return true;
+        } catch (error) {
+            console.error('線上排行榜上傳錯誤:', error);
+            return false;
+        }
+    }
+}
+
+// 4. 遊戲主類別 (NEON BREAKER ENGINE)
 class GameEngine {
     constructor() {
         this.canvas = document.getElementById('game-canvas');
@@ -220,6 +285,7 @@ class GameEngine {
         // 模組實例
         this.sound = new SoundSynth();
         this.particles = new ParticleEngine();
+        this.leaderboard = new LeaderboardManager();
         
         // 遊戲實體
         this.paddle = {
@@ -267,10 +333,17 @@ class GameEngine {
         // 排行榜最高分
         this.highScore = parseInt(localStorage.getItem('neon_breaker_highscore')) || 0;
         
+        // 街機風格線上登錄狀態
+        this.arcadeName = ['A', 'A', 'A'];
+        this.focusedCharIndex = 0;
+        
         // 綁定事件監聽器
         this.bindEvents();
         this.updateHUD();
         this.resizeCanvas();
+        
+        // 啟動時向雲端同步排行榜數據
+        this.refreshGlobalLeaderboards();
         
         // 啟動主繪圖循環 (僅渲染背景)
         this.tick = this.tick.bind(this);
@@ -321,16 +394,16 @@ class GameEngine {
     
     // 生成一個基礎球體
     spawnBall(x = this.paddle.x, y = this.paddle.y - 12, isStuck = true) {
-        // 根據難度設定初始速度
-        let baseSpeed = 5;
-        if (this.difficulty === 'easy') baseSpeed = 4;
-        if (this.difficulty === 'hard') baseSpeed = 6;
+        // 根據難度設定初始速度 (調整為更快、更刺激的節奏)
+        let baseSpeed = 8;
+        if (this.difficulty === 'easy') baseSpeed = 6;
+        if (this.difficulty === 'hard') baseSpeed = 10;
         
-        // 每升一級球體速度提升 10%
+        // 每升一級球體速度提升 8%
         baseSpeed *= (1 + (this.level - 1) * 0.08);
         
-        // 限制最大基礎速度避免穿透
-        if (baseSpeed > 10) baseSpeed = 10;
+        // 限制最大基礎速度避免穿透 (配合高速碰撞位置修正，上限提升至 15)
+        if (baseSpeed > 15) baseSpeed = 15;
         
         const angle = -Math.PI / 3 - Math.random() * Math.PI / 3; // -60 到 -120 度
         
@@ -388,8 +461,9 @@ class GameEngine {
             }
         });
         
-        // 鍵盤暫停監聽
+        // 鍵盤暫停、街機暱稱鍵盤直覺輸入與聚焦監聽
         window.addEventListener('keydown', (e) => {
+            // A. 暫停鍵 (SPACE)
             if (e.code === 'Space') {
                 e.preventDefault();
                 if (this.state === 'PLAYING') {
@@ -400,7 +474,88 @@ class GameEngine {
                     document.getElementById('paused-overlay').classList.add('hidden');
                     this.sound.init();
                 }
+                return;
             }
+
+            // B. 排行榜街機輸入模式下
+            const submitPanel = document.getElementById('leaderboard-submit-panel');
+            if (this.state === 'GAME_OVER' && submitPanel && !submitPanel.classList.contains('hidden')) {
+                // 左右方向鍵切換聚焦字元
+                if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    this.focusedCharIndex = (this.focusedCharIndex - 1 + 3) % 3;
+                    this.updateArcadeNameUI();
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    this.focusedCharIndex = (this.focusedCharIndex + 1) % 3;
+                    this.updateArcadeNameUI();
+                }
+                
+                // 上下鍵輪播切換字元 A-Z-0-9
+                else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    this.changeCharValue(this.focusedCharIndex, true);
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    this.changeCharValue(this.focusedCharIndex, false);
+                }
+                
+                // 退格鍵 (Backspace) 倒退回前一個字元並重設
+                else if (e.key === 'Backspace') {
+                    e.preventDefault();
+                    this.arcadeName[this.focusedCharIndex] = 'A';
+                    this.updateArcadeNameUI();
+                    this.focusedCharIndex = Math.max(this.focusedCharIndex - 1, 0);
+                    this.updateArcadeNameUI();
+                }
+                
+                // Enter 直接傳送飛行紀錄
+                else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.submitOnlineScore();
+                }
+                
+                // 字母或數字 A-Z / 0-9 直覺輸入
+                else if (/^[a-zA-Z0-9]$/.test(e.key)) {
+                    e.preventDefault();
+                    this.arcadeName[this.focusedCharIndex] = e.key.toUpperCase();
+                    this.updateArcadeNameUI();
+                    // 自動聚焦至下一個字元
+                    if (this.focusedCharIndex < 2) {
+                        this.focusedCharIndex++;
+                        this.updateArcadeNameUI();
+                    }
+                }
+            }
+        });
+
+        // 街機風格暱稱框點擊直接切換聚焦
+        const selectors = document.querySelectorAll('.char-selector');
+        selectors.forEach(sel => {
+            sel.addEventListener('click', () => {
+                this.focusedCharIndex = parseInt(sel.dataset.index);
+                this.updateArcadeNameUI();
+            });
+        });
+
+        // 街機滾輪上下按鈕點擊
+        const charNavs = document.querySelectorAll('.char-nav');
+        charNavs.forEach(nav => {
+            nav.addEventListener('click', (e) => {
+                e.stopPropagation(); // 阻止氣泡事件
+                const sel = nav.closest('.char-selector');
+                const idx = parseInt(sel.dataset.index);
+                this.focusedCharIndex = idx;
+                this.updateArcadeNameUI();
+
+                const isUp = nav.classList.contains('up');
+                this.changeCharValue(idx, isUp);
+            });
+        });
+
+        // 排行榜上傳按鈕點擊
+        document.getElementById('submit-score-btn').addEventListener('click', () => {
+            this.submitOnlineScore();
         });
         
         // 難度選擇
@@ -1230,7 +1385,7 @@ class GameEngine {
     triggerGameOver() {
         this.state = 'GAME_OVER';
         
-        // 儲存最高分
+        // 儲存本地最高分
         if (this.score > this.highScore) {
             this.highScore = this.score;
             localStorage.setItem('neon_breaker_highscore', this.highScore);
@@ -1238,9 +1393,31 @@ class GameEngine {
         
         this.updateHUD();
         
-        // 顯示遊戲結束玻璃覆蓋層
+        // 顯示遊戲結束得分
         document.getElementById('final-score').textContent = this.score;
         document.getElementById('final-level').textContent = this.level;
+        
+        // 判斷是否夠資格登錄全球連線排行榜 (只要分數大於 0 即可登錄，若有資料則會比較第 10 名分數)
+        const submitPanel = document.getElementById('leaderboard-submit-panel');
+        const submitBtn = document.getElementById('submit-score-btn');
+        
+        if (this.score > 0) {
+            if (submitPanel) submitPanel.classList.remove('hidden');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '傳送飛行紀錄';
+            }
+            // 重設街機暱稱
+            this.arcadeName = ['A', 'A', 'A'];
+            this.focusedCharIndex = 0;
+            this.updateArcadeNameUI();
+        } else {
+            if (submitPanel) submitPanel.classList.add('hidden');
+        }
+
+        // 下載並刷新最新全球排行榜數據
+        this.refreshGlobalLeaderboards();
+        
         document.getElementById('game-over-screen').classList.remove('hidden');
         document.getElementById('game-over-screen').classList.add('active');
         
@@ -1517,6 +1694,144 @@ class GameEngine {
         this.draw();
         
         requestAnimationFrame(this.tick);
+    }
+
+    // ==========================================================================
+    // 全球連線排行榜與街機輸入控制方法 (Leaderboard Helpers)
+    // ==========================================================================
+
+    // 下載並更新全球線上排行榜 UI
+    async refreshGlobalLeaderboards() {
+        const startLoading = document.getElementById('global-board-start-loading');
+        const endLoading = document.getElementById('global-board-end-loading');
+        const startTable = document.getElementById('global-board-start');
+        const endTable = document.getElementById('global-board-end');
+        const startBody = document.getElementById('global-board-start-body');
+        const endBody = document.getElementById('global-board-end-body');
+
+        // 顯示 Loading 特效，隱藏表格
+        if (startLoading) {
+            startLoading.classList.remove('hidden');
+            startLoading.textContent = "CONNECTING TO CYBERNET...";
+        }
+        if (endLoading) {
+            endLoading.classList.remove('hidden');
+            endLoading.textContent = "CONNECTING TO CYBERNET...";
+        }
+        if (startTable) startTable.classList.add('hidden');
+        if (endTable) endTable.classList.add('hidden');
+
+        const scores = await this.leaderboard.getScores();
+
+        if (scores === null) {
+            // 連線失敗，顯示離線文字
+            const offlineText = "CYBERNET OFFLINE (離線模式)";
+            if (startLoading) startLoading.textContent = offlineText;
+            if (endLoading) endLoading.textContent = offlineText;
+            return;
+        }
+
+        // 渲染表格內容
+        const renderTable = (body, table, loading) => {
+            if (!body || !table || !loading) return;
+            body.innerHTML = '';
+            
+            if (scores.length === 0) {
+                body.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #828ba8; padding: 20px 0;">尚無飛行紀錄，等待首位開拓者...</td></tr>`;
+            } else {
+                scores.forEach((entry, idx) => {
+                    const row = document.createElement('tr');
+                    // 冠亞季軍標誌或數字排名
+                    let rankHtml = `${idx + 1}`;
+                    if (idx === 0) rankHtml = "🥇 1";
+                    else if (idx === 1) rankHtml = "🥈 2";
+                    else if (idx === 2) rankHtml = "🥉 3";
+
+                    row.innerHTML = `
+                        <td>${rankHtml}</td>
+                        <td>${entry.name}</td>
+                        <td>${entry.level}</td>
+                        <td>${String(entry.score).padStart(6, '0')}</td>
+                    `;
+                    body.appendChild(row);
+                });
+            }
+
+            loading.classList.add('hidden');
+            table.classList.remove('hidden');
+        };
+
+        renderTable(startBody, startTable, startLoading);
+        renderTable(endBody, endTable, endLoading);
+    }
+
+    // 將街機暱稱與分數上傳至雲端
+    async submitOnlineScore() {
+        const name = this.arcadeName.join('');
+        if (name.length !== 3 || name.includes(' ')) return;
+
+        const submitBtn = document.getElementById('submit-score-btn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'TRANSMITTING...';
+        }
+
+        const success = await this.leaderboard.addScore(name, this.score, this.level);
+
+        if (success) {
+            // 上傳成功，隱藏上傳面板
+            const submitPanel = document.getElementById('leaderboard-submit-panel');
+            if (submitPanel) submitPanel.classList.add('hidden');
+            
+            // 重新下載並整理全球排行榜
+            await this.refreshGlobalLeaderboards();
+        } else {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'RETRY TRANSMIT (重試傳送)';
+            }
+        }
+    }
+
+    // 更新街機暱稱 UI
+    updateArcadeNameUI() {
+        const charSelectors = document.querySelectorAll('.char-selector');
+        charSelectors.forEach((sel, idx) => {
+            const display = sel.querySelector('.char-display');
+            if (display) display.textContent = this.arcadeName[idx];
+            
+            // 設定高亮聚焦框
+            if (idx === this.focusedCharIndex) {
+                sel.classList.add('focused');
+            } else {
+                sel.classList.remove('focused');
+            }
+        });
+    }
+
+    // 變更街機滾輪字元 (支援 A-Z 0-9 輪播循環)
+    changeCharValue(idx, isUp) {
+        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        const currentChar = this.arcadeName[idx];
+        let currentPos = alphabet.indexOf(currentChar);
+        if (currentPos === -1) currentPos = 0;
+
+        if (isUp) {
+            currentPos = (currentPos - 1 + alphabet.length) % alphabet.length; // 向上滾動
+        } else {
+            currentPos = (currentPos + 1) % alphabet.length; // 向下滾動
+        }
+
+        this.arcadeName[idx] = alphabet[currentPos];
+        this.updateArcadeNameUI();
+        
+        // 播放合成微按鍵音
+        this.sound.init();
+        const sound = this.sound.createOscillator('sine', 440, 0.05, 0.1);
+        if (sound) {
+            sound.osc.start();
+            sound.osc.stop(this.sound.ctx.currentTime + 0.05);
+        }
     }
 }
 

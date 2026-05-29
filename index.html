@@ -25,24 +25,50 @@
             <h1 class="neon-title" data-text="NEON BREAKER">NEON BREAKER</h1>
             <p class="cyber-subtitle">// GRID DEFENSE SYSTEM v1.0.4</p>
             
-            <div class="difficulty-selector">
-                <span class="selector-label">選擇難度:</span>
-                <div class="btn-group">
-                    <button class="diff-btn" data-diff="easy">簡單</button>
-                    <button class="diff-btn active" data-diff="normal">一般</button>
-                    <button class="diff-btn" data-diff="hard">困難</button>
+            <div class="menu-columns">
+                <!-- 左側控制面板 -->
+                <div class="menu-left">
+                    <div class="difficulty-selector">
+                        <span class="selector-label">選擇難度:</span>
+                        <div class="btn-group">
+                            <button class="diff-btn" data-diff="easy">簡單</button>
+                            <button class="diff-btn active" data-diff="normal">一般</button>
+                            <button class="diff-btn" data-diff="hard">困難</button>
+                        </div>
+                    </div>
+
+                    <button id="start-btn" class="glowing-btn magenta">初始化核心 (開始遊戲)</button>
+
+                    <div class="instructions-panel">
+                        <h3>操控協協定 [CONTROLS]</h3>
+                        <ul>
+                            <li><span class="key">滑鼠左右移動</span> 控制能量擋板防禦邊界</li>
+                            <li><span class="key">左鍵點擊</span> 釋放核心球體 / 發射加載雷射</li>
+                            <li><span class="key">空白鍵 (SPACE)</span> 暫停 / 恢復遊戲</li>
+                        </ul>
+                    </div>
                 </div>
-            </div>
 
-            <button id="start-btn" class="glowing-btn magenta">初始化核心 (開始遊戲)</button>
-
-            <div class="instructions-panel">
-                <h3>操控協定 [CONTROLS]</h3>
-                <ul>
-                    <li><span class="key">滑鼠左右移動</span> 控制能量擋板防禦邊界</li>
-                    <li><span class="key">左鍵點擊</span> 釋放核心球體 / 發射加載雷射</li>
-                    <li><span class="key">空白鍵 (SPACE)</span> 暫停 / 恢復遊戲</li>
-                </ul>
+                <!-- 右側線上排行榜 -->
+                <div class="menu-right">
+                    <div class="leaderboard-container">
+                        <h3>🏆 全球虛擬英雄榜</h3>
+                        <div class="leaderboard-loading" id="global-board-start-loading">CONNECTING TO CYBERNET...</div>
+                        <table class="leaderboard-table hidden" id="global-board-start">
+                            <thead>
+                                <tr>
+                                    <th>RANK</th>
+                                    <th>PILOT</th>
+                                    <th>LVL</th>
+                                    <th>SCORE</th>
+                                </tr>
+                            </thead>
+                            <tbody id="global-board-start-body">
+                                <!-- 動態注入 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -94,18 +120,67 @@
             <h2 class="neon-title cyan" data-text="SYSTEM OFFLINE">SYSTEM OFFLINE</h2>
             <p class="cyber-subtitle">// 能源防禦核心已崩解</p>
             
-            <div class="score-summary">
-                <div class="score-row">
-                    <span>最終得分:</span>
-                    <span id="final-score" class="neon-cyan-text">0</span>
+            <div class="game-over-columns">
+                <!-- 左側結算與登錄區 -->
+                <div class="game-over-left">
+                    <div class="score-summary">
+                        <div class="score-row">
+                            <span>最終得分:</span>
+                            <span id="final-score" class="neon-cyan-text">0</span>
+                        </div>
+                        <div class="score-row">
+                            <span>通關等級:</span>
+                            <span id="final-level" class="neon-magenta-text">1</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 線上得分登錄區 (街機風格暱稱輸入) -->
+                    <div id="leaderboard-submit-panel" class="submit-panel hidden">
+                        <p class="neon-pulse-text submit-title">🏆 刷新紀錄！登錄代號 🏆</p>
+                        <div class="arcade-input-container">
+                            <div class="char-selector" data-index="0">
+                                <button class="char-nav up">▲</button>
+                                <span class="char-display">A</span>
+                                <button class="char-nav down">▼</button>
+                            </div>
+                            <div class="char-selector" data-index="1">
+                                <button class="char-nav up">▲</button>
+                                <span class="char-display">A</span>
+                                <button class="char-nav down">▼</button>
+                            </div>
+                            <div class="char-selector" data-index="2">
+                                <button class="char-nav up">▲</button>
+                                <span class="char-display">A</span>
+                                <button class="char-nav down">▼</button>
+                            </div>
+                        </div>
+                        <button id="submit-score-btn" class="glowing-btn yellow submit-btn">傳送飛行紀錄</button>
+                    </div>
+
+                    <button id="retry-btn" class="glowing-btn cyan retry-btn">重啟系統 (重新開始)</button>
                 </div>
-                <div class="score-row">
-                    <span>通關等級:</span>
-                    <span id="final-level" class="neon-magenta-text">1</span>
+
+                <!-- 右側全球線上英雄榜 -->
+                <div class="game-over-right">
+                    <div class="leaderboard-container">
+                        <h3>🏆 全球線上英雄榜 (TOP 10)</h3>
+                        <div class="leaderboard-loading" id="global-board-end-loading">CONNECTING TO CYBERNET...</div>
+                        <table class="leaderboard-table hidden" id="global-board-end">
+                            <thead>
+                                <tr>
+                                    <th>RANK</th>
+                                    <th>PILOT</th>
+                                    <th>LVL</th>
+                                    <th>SCORE</th>
+                                </tr>
+                            </thead>
+                            <tbody id="global-board-end-body">
+                                <!-- 動態注入 -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-
-            <button id="retry-btn" class="glowing-btn cyan">重啟系統 (重新開始)</button>
         </div>
 
         <!-- 4. 通關慶祝畫面 -->
