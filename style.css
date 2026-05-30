@@ -750,7 +750,7 @@ body {
     font-weight: bold;
 }
 
-/* 街機風格輸入面板 */
+/* 得分登錄面板 */
 .submit-panel {
     background: rgba(255, 0, 127, 0.05);
     border: 1px dashed rgba(255, 0, 127, 0.3);
@@ -772,59 +772,39 @@ body {
     margin-bottom: 10px !important;
 }
 
-.arcade-input-container {
-    display: flex;
-    gap: 15px;
+/* 名稱文字輸入框 */
+.name-input-container {
+    width: 100%;
     margin: 8px 0;
 }
 
-.char-selector {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(255, 0, 127, 0.3);
-    border-radius: 6px;
-    padding: 4px;
-    width: 50px;
-    box-shadow: inset 0 0 10px rgba(255, 0, 127, 0.1);
-}
-
-.char-selector.focused {
-    border-color: var(--neon-cyan);
-    box-shadow: 0 0 10px rgba(0, 243, 255, 0.3), inset 0 0 10px rgba(0, 243, 255, 0.1);
-}
-
-.char-nav {
-    background: transparent;
-    border: none;
-    color: #828ba8;
-    font-size: 12px;
-    cursor: pointer;
-    padding: 2px 8px;
-    transition: color 0.1s;
-}
-
-.char-nav:hover {
-    color: var(--neon-cyan);
-    text-shadow: 0 0 5px var(--neon-cyan);
-}
-
-.char-display {
-    font-family: var(--font-header);
-    font-size: 26px;
-    font-weight: 900;
-    color: #fff;
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
-    height: 36px;
-    line-height: 36px;
-    text-align: center;
+.player-name-input {
     width: 100%;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(0, 243, 255, 0.4);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-family: var(--font-header);
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    letter-spacing: 2px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.char-selector.focused .char-display {
-    color: var(--neon-cyan);
-    text-shadow: 0 0 8px var(--neon-cyan);
+.player-name-input::placeholder {
+    color: #828ba8;
+    font-size: 14px;
+    letter-spacing: 1px;
+    font-weight: 500;
+}
+
+.player-name-input:focus {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 12px rgba(0, 243, 255, 0.3), inset 0 0 8px rgba(0, 243, 255, 0.08);
 }
 
 .submit-btn {
@@ -832,6 +812,23 @@ body {
     padding: 8px 25px;
     font-size: 14px;
     width: 90%;
+}
+
+/* 排行榜難度副標題 */
+.lb-diff-subtitle {
+    font-size: 13px;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 6px rgba(0, 243, 255, 0.5);
+    font-family: var(--font-body);
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+.lb-hint {
+    font-size: 11px;
+    color: #828ba8;
+    margin: -6px 0 8px 0;
+    letter-spacing: 0.5px;
 }
 
 /* 10. 支援行動裝置適配 (如果寬度不足) */

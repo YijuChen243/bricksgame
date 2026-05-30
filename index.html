@@ -52,7 +52,8 @@
                 <!-- 右側線上排行榜 -->
                 <div class="menu-right">
                     <div class="leaderboard-container">
-                        <h3>🏆 全球虛擬英雄榜</h3>
+                        <h3>🏆 全球虛擬英雄榜 <span id="lb-start-subtitle" class="lb-diff-subtitle">[一般]</span></h3>
+                        <p class="lb-hint">切換難度即可查看對應排行</p>
                         <div class="leaderboard-loading" id="global-board-start-loading">CONNECTING TO CYBERNET...</div>
                         <table class="leaderboard-table hidden" id="global-board-start">
                             <thead>
@@ -134,25 +135,12 @@
                         </div>
                     </div>
                     
-                    <!-- 線上得分登錄區 (街機風格暱稱輸入) -->
+                    <!-- 線上得分登錄區 -->
                     <div id="leaderboard-submit-panel" class="submit-panel hidden">
-                        <p class="neon-pulse-text submit-title">🏆 刷新紀錄！登錄代號 🏆</p>
-                        <div class="arcade-input-container">
-                            <div class="char-selector" data-index="0">
-                                <button class="char-nav up">▲</button>
-                                <span class="char-display">A</span>
-                                <button class="char-nav down">▼</button>
-                            </div>
-                            <div class="char-selector" data-index="1">
-                                <button class="char-nav up">▲</button>
-                                <span class="char-display">A</span>
-                                <button class="char-nav down">▼</button>
-                            </div>
-                            <div class="char-selector" data-index="2">
-                                <button class="char-nav up">▲</button>
-                                <span class="char-display">A</span>
-                                <button class="char-nav down">▼</button>
-                            </div>
+                        <p class="neon-pulse-text submit-title">🏆 恭喜！登錄你的名字 🏆</p>
+                        <div class="name-input-container">
+                            <input type="text" id="player-name-input" class="player-name-input"
+                                   maxlength="10" placeholder="輸入你的名字..." autocomplete="off" spellcheck="false">
                         </div>
                         <button id="submit-score-btn" class="glowing-btn yellow submit-btn">傳送飛行紀錄</button>
                     </div>
@@ -163,7 +151,7 @@
                 <!-- 右側全球線上英雄榜 -->
                 <div class="game-over-right">
                     <div class="leaderboard-container">
-                        <h3>🏆 全球線上英雄榜 (TOP 10)</h3>
+                        <h3>🏆 全球線上英雄榜 <span id="lb-end-subtitle" class="lb-diff-subtitle">[一般]</span></h3>
                         <div class="leaderboard-loading" id="global-board-end-loading">CONNECTING TO CYBERNET...</div>
                         <table class="leaderboard-table hidden" id="global-board-end">
                             <thead>
